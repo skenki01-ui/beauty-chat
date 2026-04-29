@@ -10,7 +10,7 @@ import Result from "./pages/Result";
 import Menu from "./pages/Menu";
 import Payment from "./pages/Payment";
 import Subsidy from "./pages/Subsidy";
-import SubsidyChat from "./pages/SubsidyChat";
+
 import List from "./pages/List";
 import Sales from "./pages/Sales";
 
