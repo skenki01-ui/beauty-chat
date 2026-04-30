@@ -1,19 +1,33 @@
 export default function Menu({ setPage, setShow }) {
   return (
     <div style={styles.overlay}>
-      <div style={styles.menu}>
+      <div style={styles.box}>
         <h3>管理メニュー</h3>
 
         <button onClick={() => {
-          setShow(false);
           setPage("list");
+          setShow(false);
         }}>
           カルテ一覧
         </button>
 
         <button onClick={() => {
+          setPage("subsidy");
           setShow(false);
+        }}>
+          補助金
+        </button>
+
+        <button onClick={() => {
+          setPage("payment");
+          setShow(false);
+        }}>
+          支払い
+        </button>
+
+        <button onClick={() => {
           setPage("home");
+          setShow(false);
         }}>
           初期画面
         </button>
@@ -38,13 +52,14 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
   },
-  menu: {
+  box: {
     background: "#fff",
     padding: 20,
     borderRadius: 10,
-    width: 260,
     display: "flex",
     flexDirection: "column",
     gap: 10,
+    width: 200,
+    textAlign: "center",
   },
 };
