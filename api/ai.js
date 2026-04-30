@@ -1,57 +1,136 @@
 export default async function handler(req, res) {
   try {
-    // POST以外は拒否
     if (req.method !== "POST") {
-      return res.status(405).json({ error: "Method Not Allowed" });
+      return res.status(405).json({ error: "method error" });
     }
 
-    const userMessage = req.body.message;
+    const body = req.body;
 
-    if (!userMessage) {
-      return res.status(400).json({ error: "No message" });
+    const callAI = async (input) => {
+      const r = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          input,
+        }),
+      });
+
+      return r.json();
+    };
+
+    const textLog = body.messages
+      .map((m) => `${m.role === "user" ? "ユーザー" : "AI"}：${m.text}`)
+      .join("\n");
+
+    // 🔥 チャット
+    if (body.type === "chat") {
+      let prompt = "";
+
+      // 🔹相談モード
+      if (body.mode === "consult") {
+        prompt = `
+あなたは店舗のカウンセリングAIです。
+
+・日本語で回答
+・やさしく
+・提案は自然に
+
+【カルテ】
+${JSON.stringify(body.karute)}
+
+【会話】
+${textLog}
+
+次の返答を作成してください。
+`;
+      }
+
+      // 🔹案内モード
+      if (body.mode === "guide") {
+        prompt = `
+あなたは店舗案内AIです。
+
+・日本語で回答
+・簡潔
+・わかりやすく
+
+【会話】
+${textLog}
+
+質問に答えてください。
+`;
+      }
+
+      const data = await callAI(prompt);
+
+      const text =
+        data.output_text ||
+        data.output?.[0]?.content?.[0]?.text ||
+        "エラー";
+
+      return res.json({ reply: text });
     }
 
-    // AIリクエスト
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
+    // 🔥 要約
+    if (body.type === "summary") {
+      let prompt = "";
 
-        input: `
-あなたはユーザーに寄り添う会話AIです。
+      if (body.mode === "consult") {
+        prompt = `
+以下をカルテとしてまとめてください。
 
-ルール：
-・否定しない
-・押し付けない
-・自然な会話
-・短すぎず長すぎず
-・依存させない
+【カルテ】
+${JSON.stringify(body.karute)}
 
-さらに、
-ユーザーの言語を自動判定し、その言語で返答してください。
+【会話】
+${textLog}
 
-内容：
-${userMessage}
-`
-      })
-    });
+▼形式
+【悩み】
+・
 
-    const data = await response.json();
+【要望】
+・
 
-    // レスポンス抽出（安全）
-    const text =
-      data.output_text ||
-      data.output?.[0]?.content?.[0]?.text ||
-      "ごめん、うまく返答できなかった";
+【提案内容】
+・
+`;
+      }
 
-    return res.status(200).json({ text });
+      if (body.mode === "guide") {
+        prompt = `
+以下のやり取りを簡潔にまとめてください。
 
-  } catch (error) {
-    console.error("APIエラー:", error);
+【会話】
+${textLog}
+
+▼形式
+【問い合わせ内容】
+・
+
+【対応内容】
+・
+`;
+      }
+
+      const data = await callAI(prompt);
+
+      const text =
+        data.output_text ||
+        data.output?.[0]?.content?.[0]?.text ||
+        "要約エラー";
+
+      return res.json({ summary: text });
+    }
+
+    return res.status(400).json({ error: "invalid" });
+
+  } catch (e) {
+    console.error(e);
     return res.status(500).json({ error: "server error" });
   }
 }

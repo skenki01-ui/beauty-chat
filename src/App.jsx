@@ -5,23 +5,17 @@ import Karute from "./pages/Karute";
 import Answer from "./pages/Answer";
 import ModeSelect from "./pages/ModeSelect";
 import Chat from "./pages/Chat";
-import ChatFree from "./pages/ChatFree";
-import Result from "./pages/Result";
+import Summary from "./pages/Summary";
 import Menu from "./pages/Menu";
-import Payment from "./pages/Payment";
-import Subsidy from "./pages/Subsidy";
-
-import List from "./pages/List";
-import Sales from "./pages/Sales";
-import Summary from "./pages/Summary"; // ←追加
 
 export default function App() {
   const [page, setPage] = useState("home");
-  const [name, setName] = useState("");
+
+  const [mode, setMode] = useState(""); // 🔥追加
+  const [type, setType] = useState(""); // 🔥追加
+
   const [karute, setKarute] = useState({});
   const [showMenu, setShowMenu] = useState(false);
-
-  const [summary, setSummary] = useState(""); // ←追加
 
   const pressTimer = useRef(null);
 
@@ -70,32 +64,29 @@ export default function App() {
         </>
       )}
 
-      {page === "home" && <Home setPage={setPage} name={name} setName={setName} />}
-      {page === "karute" && <Karute setPage={setPage} name={name} setKarute={setKarute} />}
-      {page === "answer" && <Answer karute={karute} setPage={setPage} />}
-      {page === "result" && <Result karute={karute} setPage={setPage} />}
-      {page === "mode" && <ModeSelect setPage={setPage} />}
-
-      {/* ★ここ修正 */}
-      {page === "chat" && (
-        <Chat
+      {page === "home" && <Home setPage={setPage} />}
+      {page === "mode" && (
+        <ModeSelect
           setPage={setPage}
-          setSummary={setSummary} // ←追加
-          parts={karute.parts || []}
-          karute={karute}
+          setMode={setMode}
+          setType={setType}
         />
       )}
 
-      {page === "chatFree" && <ChatFree setPage={setPage} />}
-      {page === "payment" && <Payment setPage={setPage} />}
-      {page === "subsidy" && <Subsidy setPage={setPage} />}
-      {page === "list" && <List setPage={setPage} />}
-      {page === "sales" && <Sales setPage={setPage} />}
-
-      {/* ★追加 */}
-      {page === "summary" && (
-        <Summary summary={summary} setPage={setPage} />
+      {page === "karute" && (
+        <Karute setPage={setPage} setKarute={setKarute} />
       )}
+
+      {page === "chat" && (
+        <Chat
+          setPage={setPage}
+          karute={karute}
+          mode={mode}   // 🔥追加
+          type={type}   // 🔥追加
+        />
+      )}
+
+      {page === "summary" && <Summary setPage={setPage} />}
 
       {showMenu && <Menu setPage={setPage} setShow={setShowMenu} />}
     </div>

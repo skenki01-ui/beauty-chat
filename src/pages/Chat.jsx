@@ -1,16 +1,16 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 
-export default function Chat({ setPage, setSummary }) {
+export default function Chat({ setPage, karute, mode, type }) {
   const [messages, setMessages] = useState([
     {
-      role: "ai",
-      text: "気になることやお悩みがあれば教えてください。うまくまとまっていなくても大丈夫です。",
+      role: "assistant",
+      text: "ご質問やお悩みを教えてください。",
     },
   ]);
+
   const [input, setInput] = useState("");
 
-  const endTimer = useRef(null);
-
+  // 🔹送信
   const sendMessage = async () => {
     if (!input) return;
 
@@ -21,45 +21,74 @@ export default function Chat({ setPage, setSummary }) {
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "chat",
+          mode,
+          category: type,
+          messages: newMessages,
+          karute,
+        }),
       });
 
       const data = await res.json();
 
-      setMessages((prev) => [...prev, { role: "ai", text: data.reply }]);
+      setMessages([
+        ...newMessages,
+        { role: "assistant", text: data.reply || "返答なし" },
+      ]);
     } catch {
-      setMessages((prev) => [...prev, { role: "ai", text: "エラー" }]);
+      setMessages([
+        ...newMessages,
+        { role: "assistant", text: "通信エラー" },
+      ]);
     }
   };
 
-  // 🔥 終了処理（まとめ作る）
-  const handleEnd = () => {
-    const summary = messages
-      .map((m) => `${m.role === "user" ? "あなた" : "AI"}：${m.text}`)
-      .join("\n");
+  // 🔥終了 → 要約生成
+  const handleEnd = async () => {
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "summary",
+          mode,
+          category: type,
+          messages,
+          karute,
+        }),
+      });
 
-    setSummary(summary);
-    setPage("summary");
+      const data = await res.json();
+
+      const summary = data.summary || "生成失敗";
+
+      // 保存
+      localStorage.setItem("lastSummary", summary);
+
+      const saved = JSON.parse(
+        localStorage.getItem("summaryHistory") || "[]"
+      );
+
+      const updated = [summary, ...saved].slice(0, 3);
+
+      localStorage.setItem("summaryHistory", JSON.stringify(updated));
+
+    } catch (e) {
+      console.log(e);
+    }
+
+    setPage("home");
   };
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#fff",
-      }}
-    >
-      {/* チャット */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: 20,
-        }}
-      >
+    <div style={styles.container}>
+      <div style={styles.chatBox}>
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -68,63 +97,79 @@ export default function Chat({ setPage, setSummary }) {
               marginBottom: 10,
             }}
           >
-            <div
+            <span
               style={{
                 display: "inline-block",
                 padding: 10,
                 borderRadius: 10,
                 background:
-                  msg.role === "user" ? "#4da6ff" : "#eee",
+                  msg.role === "user" ? "#4a90e2" : "#eee",
                 color: msg.role === "user" ? "#fff" : "#000",
                 maxWidth: "70%",
               }}
             >
               {msg.text}
-            </div>
+            </span>
           </div>
         ))}
       </div>
 
-      {/* 🔥 終了ボタン（ここに移動） */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          paddingBottom: 5,
-        }}
-      >
-        <button
-          onClick={handleEnd}
-          style={{
-            padding: "6px 14px",
-            fontSize: 12,
-            background: "#444",
-            color: "#fff",
-            border: "none",
-            borderRadius: 20,
-            opacity: 0.8,
-          }}
-        >
-          終了
-        </button>
-      </div>
-
-      {/* 入力 */}
-      <div
-        style={{
-          display: "flex",
-          padding: 10,
-          borderTop: "1px solid #ccc",
-        }}
-      >
+      <div style={styles.inputArea}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          style={{ flex: 1, padding: 10 }}
           placeholder="入力..."
+          style={styles.input}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") sendMessage();
+          }}
         />
         <button onClick={sendMessage}>送信</button>
+      </div>
+
+      <div style={styles.endWrap}>
+        <button onClick={handleEnd} style={styles.endBtn}>
+          終了
+        </button>
       </div>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    background: "#fff",
+    height: "100vh",
+    display: "flex",
+    flexDirection: "column",
+  },
+  chatBox: {
+    flex: 1,
+    padding: 20,
+    overflowY: "auto",
+    background: "#f5f7fa",
+  },
+  inputArea: {
+    display: "flex",
+    padding: 10,
+    borderTop: "1px solid #ccc",
+  },
+  input: {
+    flex: 1,
+    marginRight: 5,
+    padding: 10,
+  },
+  endWrap: {
+    display: "flex",
+    justifyContent: "center",
+    padding: 10,
+  },
+  endBtn: {
+    padding: "6px 14px",
+    fontSize: 12,
+    background: "#444",
+    color: "#fff",
+    border: "none",
+    borderRadius: 20,
+  },
+};

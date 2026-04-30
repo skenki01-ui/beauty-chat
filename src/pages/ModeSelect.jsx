@@ -1,21 +1,55 @@
-export default function ModeSelect({ setPage }) {
+export default function ModeSelect({ setPage, setMode, setType }) {
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
-        <h3>モード選択</h3>
+      <h2>利用タイプを選択</h2>
 
-        <button
-          style={styles.button}
-          onClick={() => setPage("chat")}
-        >
-          問診チャット
+      {/* 🔹 カルテあり */}
+      <div style={styles.section}>
+        <h3>相談（カルテあり）</h3>
+
+        <button onClick={() => {
+          setMode("consult");
+          setType("beauty");
+          setPage("karute");
+        }}>
+          美容 / 整体 / ジム
         </button>
 
-        <button
-          style={styles.button}
-          onClick={() => setPage("chatFree")}
-        >
-          雑談チャット
+        <button onClick={() => {
+          setMode("consult");
+          setType("dental");
+          setPage("karute");
+        }}>
+          歯医者
+        </button>
+      </div>
+
+      {/* 🔹 カルテなし */}
+      <div style={styles.section}>
+        <h3>案内（カルテなし）</h3>
+
+        <button onClick={() => {
+          setMode("guide");
+          setType("hotel");
+          setPage("chat");
+        }}>
+          ホテル
+        </button>
+
+        <button onClick={() => {
+          setMode("guide");
+          setType("restaurant");
+          setPage("chat");
+        }}>
+          飲食店
+        </button>
+
+        <button onClick={() => {
+          setMode("guide");
+          setType("shop");
+          setPage("chat");
+        }}>
+          店舗 / その他
         </button>
       </div>
     </div>
@@ -23,7 +57,15 @@ export default function ModeSelect({ setPage }) {
 }
 
 const styles = {
-  container:{height:"100vh",display:"flex",justifyContent:"center",alignItems:"center",background:"#f5f7fa"},
-  card:{background:"#fff",padding:20,borderRadius:10,width:300,textAlign:"center"},
-  button:{width:"100%",padding:15,marginBottom:10,background:"#2196f3",color:"#fff",border:"none"}
+  container: {
+    padding: 20,
+    textAlign: "center",
+    background: "#fff",
+  },
+  section: {
+    marginTop: 30,
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+  },
 };
