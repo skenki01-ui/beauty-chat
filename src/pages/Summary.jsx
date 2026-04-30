@@ -6,47 +6,40 @@ export default function Summary({ summary, setPage }) {
   useEffect(() => {
     if (!summary) return;
 
-    // 既存履歴取得
     const saved = JSON.parse(localStorage.getItem("summaryHistory") || "[]");
-
-    // 先頭に追加
     const updated = [summary, ...saved];
-
-    // 3件に制限
     const limited = updated.slice(0, 3);
 
     localStorage.setItem("summaryHistory", JSON.stringify(limited));
     setHistory(limited);
   }, [summary]);
 
-  const copy = (text) => {
-    navigator.clipboard.writeText(text);
+  const copy = () => {
+    navigator.clipboard.writeText(summary);
     alert("コピーしました");
   };
 
   return (
     <div style={styles.container}>
-      <h2>まとめ</h2>
+      <h2>カルテまとめ</h2>
 
-      <textarea
-        value={summary}
-        readOnly
-        style={styles.textarea}
-      />
+      <textarea value={summary} readOnly style={styles.textarea} />
 
-      <button onClick={() => copy(summary)} style={styles.button}>
-        コピー
-      </button>
+      <div>
+        <button onClick={copy} style={styles.button}>
+          コピー
+        </button>
 
-      <button onClick={() => setPage("chat")} style={styles.button}>
-        戻る
-      </button>
+        <button onClick={() => setPage("karute")} style={styles.button}>
+          カルテに戻る
+        </button>
+      </div>
 
-      <h3 style={{ marginTop: 20 }}>過去3件</h3>
+      <h3>過去3件</h3>
 
       {history.map((item, i) => (
-        <div key={i} style={styles.historyBox}>
-          <pre style={{ whiteSpace: "pre-wrap" }}>{item}</pre>
+        <div key={i} style={styles.history}>
+          <pre>{item}</pre>
         </div>
       ))}
     </div>
@@ -69,9 +62,9 @@ const styles = {
     marginRight: "10px",
     padding: "10px",
   },
-  historyBox: {
+  history: {
     border: "1px solid #ddd",
-    padding: "10px",
     marginTop: "10px",
+    padding: "10px",
   },
 };
