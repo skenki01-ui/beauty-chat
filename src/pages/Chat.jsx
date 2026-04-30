@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 
-export default function Chat({ setPage }) {
+export default function Chat({ setPage, setSummary }) {
   const [messages, setMessages] = useState([
     {
       role: "ai",
@@ -21,54 +21,43 @@ export default function Chat({ setPage }) {
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: newMessages,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMessages }),
       });
 
       const data = await res.json();
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", text: data.reply },
-      ]);
-    } catch (e) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", text: "エラーが発生しました" },
-      ]);
+      setMessages((prev) => [...prev, { role: "ai", text: data.reply }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: "ai", text: "エラー" }]);
     }
   };
 
-  // 🔥 長押し終了（誤タップ防止）
-  const handleEndStart = () => {
-    endTimer.current = setTimeout(() => {
-      setPage("karute");
-    }, 800);
-  };
+  // 🔥 終了処理（まとめ作る）
+  const handleEnd = () => {
+    const summary = messages
+      .map((m) => `${m.role === "user" ? "あなた" : "AI"}：${m.text}`)
+      .join("\n");
 
-  const handleEndCancel = () => {
-    clearTimeout(endTimer.current);
+    setSummary(summary);
+    setPage("summary");
   };
 
   return (
     <div
       style={{
-        background: "#fff",
         height: "100vh",
         display: "flex",
         flexDirection: "column",
+        background: "#fff",
       }}
     >
-      {/* チャット表示 */}
+      {/* チャット */}
       <div
         style={{
           flex: 1,
-          padding: 20,
           overflowY: "auto",
+          padding: 20,
         }}
       >
         {messages.map((msg, i) => (
@@ -96,6 +85,30 @@ export default function Chat({ setPage }) {
         ))}
       </div>
 
+      {/* 🔥 終了ボタン（ここに移動） */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          paddingBottom: 5,
+        }}
+      >
+        <button
+          onClick={handleEnd}
+          style={{
+            padding: "6px 14px",
+            fontSize: 12,
+            background: "#444",
+            color: "#fff",
+            border: "none",
+            borderRadius: 20,
+            opacity: 0.8,
+          }}
+        >
+          終了
+        </button>
+      </div>
+
       {/* 入力 */}
       <div
         style={{
@@ -107,42 +120,10 @@ export default function Chat({ setPage }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          style={{ flex: 1, padding: 10 }}
           placeholder="入力..."
-          style={{
-            flex: 1,
-            padding: 10,
-          }}
         />
         <button onClick={sendMessage}>送信</button>
-      </div>
-
-      {/* 🔥 終了ボタン（中央・小さい・長押し） */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 20,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 10,
-        }}
-      >
-        <button
-          onMouseDown={handleEndStart}
-          onMouseUp={handleEndCancel}
-          onTouchStart={handleEndStart}
-          onTouchEnd={handleEndCancel}
-          style={{
-            padding: "8px 16px",
-            fontSize: 12,
-            background: "#444",
-            color: "#fff",
-            border: "none",
-            borderRadius: 20,
-            opacity: 0.8,
-          }}
-        >
-          終了
-        </button>
       </div>
     </div>
   );
