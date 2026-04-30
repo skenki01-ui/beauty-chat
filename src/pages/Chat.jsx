@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-export default function Chat() {
+export default function Chat({ setPage, setSummary }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -10,12 +10,10 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
 
-  // 自動スクロール
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 送信
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -27,30 +25,26 @@ export default function Chat() {
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
       });
 
       const data = await res.json();
 
-      const aiMessage = {
-        role: "assistant",
-        text: data.reply || "エラーが発生しました",
-      };
-
-      setMessages([...newMessages, aiMessage]);
-    } catch (err) {
       setMessages([
         ...newMessages,
-        { role: "assistant", text: "通信エラーが発生しました" },
+        { role: "assistant", text: data.reply },
+      ]);
+    } catch {
+      setMessages([
+        ...newMessages,
+        { role: "assistant", text: "通信エラー" },
       ]);
     }
   };
 
   // まとめ生成
-  const formatSummary = () => {
+  const createSummary = () => {
     const now = new Date().toLocaleString();
 
     const lastUser = [...messages]
@@ -73,11 +67,11 @@ ${now}
 `;
   };
 
-  // コピー
-  const copySummary = () => {
-    const text = formatSummary();
-    navigator.clipboard.writeText(text);
-    alert("コピーしました");
+  // 終了ボタン
+  const endChat = () => {
+    const summary = createSummary();
+    setSummary(summary);
+    setPage("summary");
   };
 
   return (
@@ -88,8 +82,8 @@ ${now}
             key={i}
             style={
               msg.role === "user"
-                ? styles.userMessage
-                : styles.aiMessage
+                ? styles.user
+                : styles.ai
             }
           >
             {msg.text}
@@ -98,7 +92,6 @@ ${now}
         <div ref={bottomRef} />
       </div>
 
-      {/* 入力エリア */}
       <div style={styles.inputArea}>
         <input
           value={input}
@@ -109,90 +102,56 @@ ${now}
             if (e.key === "Enter") sendMessage();
           }}
         />
-        <button onClick={sendMessage} style={styles.sendButton}>
-          送信
-        </button>
+        <button onClick={sendMessage}>送信</button>
       </div>
 
-      {/* コピー */}
-      <button onClick={copySummary} style={styles.copyButton}>
-        まとめをコピー
+      <button onClick={endChat} style={styles.endButton}>
+        終了してまとめ
       </button>
     </div>
   );
 }
 
-// スタイル（白ベース固定）
 const styles = {
   container: {
-    background: "#ffffff",
+    background: "#fff",
     height: "100vh",
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
   },
-
   chatBox: {
-    width: "100%",
-    maxWidth: "400px",
     flex: 1,
-    padding: "10px",
     overflowY: "auto",
+    padding: "10px",
     background: "#f5f7fa",
   },
-
-  userMessage: {
+  user: {
     alignSelf: "flex-end",
     background: "#4a90e2",
     color: "#fff",
-    padding: "10px",
+    padding: "8px",
+    margin: "5px",
     borderRadius: "10px",
-    margin: "5px 0",
-    maxWidth: "70%",
   },
-
-  aiMessage: {
+  ai: {
     alignSelf: "flex-start",
-    background: "#ffffff",
-    color: "#333",
-    padding: "10px",
-    borderRadius: "10px",
-    margin: "5px 0",
-    maxWidth: "70%",
+    background: "#fff",
+    padding: "8px",
+    margin: "5px",
     border: "1px solid #ddd",
+    borderRadius: "10px",
   },
-
   inputArea: {
     display: "flex",
-    width: "100%",
-    maxWidth: "400px",
     padding: "10px",
-    borderTop: "1px solid #ddd",
-    background: "#fff",
   },
-
   input: {
     flex: 1,
-    padding: "10px",
-    border: "1px solid #ccc",
-    borderRadius: "5px",
+    marginRight: "5px",
   },
-
-  sendButton: {
-    marginLeft: "5px",
+  endButton: {
     padding: "10px",
-    background: "#4a90e2",
-    color: "#fff",
-    border: "none",
-    borderRadius: "5px",
-  },
-
-  copyButton: {
-    margin: "10px",
-    padding: "10px 20px",
     background: "#333",
     color: "#fff",
-    border: "none",
-    borderRadius: "5px",
   },
 };

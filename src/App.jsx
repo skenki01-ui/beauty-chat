@@ -13,12 +13,15 @@ import Subsidy from "./pages/Subsidy";
 
 import List from "./pages/List";
 import Sales from "./pages/Sales";
+import Summary from "./pages/Summary"; // ←追加
 
 export default function App() {
   const [page, setPage] = useState("home");
   const [name, setName] = useState("");
   const [karute, setKarute] = useState({});
   const [showMenu, setShowMenu] = useState(false);
+
+  const [summary, setSummary] = useState(""); // ←追加
 
   const pressTimer = useRef(null);
 
@@ -72,13 +75,27 @@ export default function App() {
       {page === "answer" && <Answer karute={karute} setPage={setPage} />}
       {page === "result" && <Result karute={karute} setPage={setPage} />}
       {page === "mode" && <ModeSelect setPage={setPage} />}
-      {page === "chat" && <Chat setPage={setPage} parts={karute.parts || []} karute={karute} />}
+
+      {/* ★ここ修正 */}
+      {page === "chat" && (
+        <Chat
+          setPage={setPage}
+          setSummary={setSummary} // ←追加
+          parts={karute.parts || []}
+          karute={karute}
+        />
+      )}
+
       {page === "chatFree" && <ChatFree setPage={setPage} />}
       {page === "payment" && <Payment setPage={setPage} />}
       {page === "subsidy" && <Subsidy setPage={setPage} />}
-      {page === "subsidyChat" && <SubsidyChat setPage={setPage} />}
       {page === "list" && <List setPage={setPage} />}
       {page === "sales" && <Sales setPage={setPage} />}
+
+      {/* ★追加 */}
+      {page === "summary" && (
+        <Summary summary={summary} setPage={setPage} />
+      )}
 
       {showMenu && <Menu setPage={setPage} setShow={setShowMenu} />}
     </div>
