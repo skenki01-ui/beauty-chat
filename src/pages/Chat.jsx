@@ -47,13 +47,8 @@ export default function Chat({ setPage, setSummary }) {
   const createSummary = () => {
     const now = new Date().toLocaleString();
 
-    const lastUser = [...messages]
-      .reverse()
-      .find((m) => m.role === "user");
-
-    const lastAI = [...messages]
-      .reverse()
-      .find((m) => m.role === "assistant");
+    const lastUser = [...messages].reverse().find(m => m.role === "user");
+    const lastAI = [...messages].reverse().find(m => m.role === "assistant");
 
     return `
 【日時】
@@ -67,7 +62,7 @@ ${now}
 `;
   };
 
-  // 終了ボタン
+  // 終了
   const endChat = () => {
     const summary = createSummary();
     setSummary(summary);
@@ -80,11 +75,7 @@ ${now}
         {messages.map((msg, i) => (
           <div
             key={i}
-            style={
-              msg.role === "user"
-                ? styles.user
-                : styles.ai
-            }
+            style={msg.role === "user" ? styles.user : styles.ai}
           >
             {msg.text}
           </div>
@@ -106,7 +97,7 @@ ${now}
       </div>
 
       <button onClick={endChat} style={styles.endButton}>
-        終了してまとめ
+        終了
       </button>
     </div>
   );
@@ -150,8 +141,9 @@ const styles = {
     marginRight: "5px",
   },
   endButton: {
-    padding: "10px",
+    padding: "12px",
     background: "#333",
     color: "#fff",
+    border: "none",
   },
 };
