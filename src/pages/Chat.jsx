@@ -9,14 +9,18 @@ export default function Chat({ setPage, karute, mode, type }) {
   ]);
 
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // 🔹送信
   const sendMessage = async () => {
-    if (!input) return;
+    if (!input.trim() || loading) return;
 
-    const newMessages = [...messages, { role: "user", text: input }];
+    const userMessage = { role: "user", text: input };
+    const newMessages = [...messages, userMessage];
+
     setMessages(newMessages);
     setInput("");
+    setLoading(true);
 
     try {
       const res = await fetch("/api/ai", {
@@ -35,16 +39,20 @@ export default function Chat({ setPage, karute, mode, type }) {
 
       const data = await res.json();
 
-      setMessages([
-        ...newMessages,
-        { role: "assistant", text: data.reply || "返答なし" },
+      const reply = data.reply || "返答なし";
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: reply },
       ]);
-    } catch {
-      setMessages([
-        ...newMessages,
+    } catch (e) {
+      setMessages((prev) => [
+        ...prev,
         { role: "assistant", text: "通信エラー" },
       ]);
     }
+
+    setLoading(false);
   };
 
   // 🔥終了 → 要約生成
@@ -68,17 +76,20 @@ export default function Chat({ setPage, karute, mode, type }) {
 
       const summary = data.summary || "生成失敗";
 
-      // 保存
+      // 🔹最新
       localStorage.setItem("lastSummary", summary);
 
+      // 🔹履歴3件
       const saved = JSON.parse(
         localStorage.getItem("summaryHistory") || "[]"
       );
 
       const updated = [summary, ...saved].slice(0, 3);
 
-      localStorage.setItem("summaryHistory", JSON.stringify(updated));
-
+      localStorage.setItem(
+        "summaryHistory",
+        JSON.stringify(updated)
+      );
     } catch (e) {
       console.log(e);
     }
@@ -88,6 +99,7 @@ export default function Chat({ setPage, karute, mode, type }) {
 
   return (
     <div style={styles.container}>
+      {/* チャット */}
       <div style={styles.chatBox}>
         {messages.map((msg, i) => (
           <div
@@ -106,14 +118,22 @@ export default function Chat({ setPage, karute, mode, type }) {
                   msg.role === "user" ? "#4a90e2" : "#eee",
                 color: msg.role === "user" ? "#fff" : "#000",
                 maxWidth: "70%",
+                wordBreak: "break-word",
               }}
             >
               {msg.text}
             </span>
           </div>
         ))}
+
+        {loading && (
+          <div style={{ color: "#999", fontSize: 12 }}>
+            AI応答中...
+          </div>
+        )}
       </div>
 
+      {/* 入力 */}
       <div style={styles.inputArea}>
         <input
           value={input}
@@ -124,9 +144,16 @@ export default function Chat({ setPage, karute, mode, type }) {
             if (e.key === "Enter") sendMessage();
           }}
         />
-        <button onClick={sendMessage}>送信</button>
+        <button
+          onClick={sendMessage}
+          disabled={loading}
+          style={styles.sendBtn}
+        >
+          送信
+        </button>
       </div>
 
+      {/* 終了 */}
       <div style={styles.endWrap}>
         <button onClick={handleEnd} style={styles.endBtn}>
           終了
@@ -143,29 +170,45 @@ const styles = {
     display: "flex",
     flexDirection: "column",
   },
+
   chatBox: {
     flex: 1,
     padding: 20,
     overflowY: "auto",
     background: "#f5f7fa",
   },
+
   inputArea: {
     display: "flex",
     padding: 10,
     borderTop: "1px solid #ccc",
+    background: "#fff",
   },
+
   input: {
     flex: 1,
     marginRight: 5,
     padding: 10,
+    borderRadius: 6,
+    border: "1px solid #ccc",
   },
+
+  sendBtn: {
+    padding: "10px 16px",
+    background: "#4a90e2",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+  },
+
   endWrap: {
     display: "flex",
     justifyContent: "center",
     padding: 10,
   },
+
   endBtn: {
-    padding: "6px 14px",
+    padding: "6px 16px",
     fontSize: 12,
     background: "#444",
     color: "#fff",

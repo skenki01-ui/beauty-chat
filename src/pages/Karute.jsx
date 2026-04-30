@@ -15,6 +15,18 @@ export default function Karute({ setPage, name, setKarute }) {
     );
   };
 
+  const handleNext = () => {
+    const data = { name, parts, trouble, period, ideal, worry };
+
+    const old = JSON.parse(localStorage.getItem("karuteList") || "[]");
+    const updated = [data, ...old].slice(0, 3); // 最大3件
+
+    localStorage.setItem("karuteList", JSON.stringify(updated));
+
+    setKarute(data);
+    setPage("answer");
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -26,9 +38,11 @@ export default function Karute({ setPage, name, setKarute }) {
           {["額","目元","鼻","頬","唇","フェイスライン"].map((p) => (
             <button
               key={p}
+              type="button"
               style={{
                 ...styles.tag,
                 background: parts.includes(p) ? "#4caf50" : "#eee",
+                color: parts.includes(p) ? "#fff" : "#000"
               }}
               onClick={() => togglePart(p)}
             >
@@ -38,46 +52,49 @@ export default function Karute({ setPage, name, setKarute }) {
         </div>
 
         <p>悩み</p>
-        <select style={styles.input} onChange={(e) => setTrouble(e.target.value)}>
+        <select
+          style={styles.input}
+          value={trouble}
+          onChange={(e) => setTrouble(e.target.value)}
+        >
           <option value="">選択</option>
-          <option>たるみ</option>
-          <option>シワ</option>
-          <option>毛穴</option>
-          <option>くすみ</option>
-          <option>ニキビ</option>
+          <option value="たるみ">たるみ</option>
+          <option value="シワ">シワ</option>
+          <option value="毛穴">毛穴</option>
+          <option value="くすみ">くすみ</option>
+          <option value="ニキビ">ニキビ</option>
         </select>
 
         <p>期間</p>
-        <select style={styles.input} onChange={(e) => setPeriod(e.target.value)}>
+        <select
+          style={styles.input}
+          value={period}
+          onChange={(e) => setPeriod(e.target.value)}
+        >
           <option value="">選択</option>
-          <option>最近</option>
-          <option>数ヶ月前</option>
-          <option>1年以上</option>
+          <option value="最近">最近</option>
+          <option value="数ヶ月前">数ヶ月前</option>
+          <option value="1年以上">1年以上</option>
         </select>
 
         <p>理想</p>
-        <input style={styles.input} onChange={(e) => setIdeal(e.target.value)} />
+        <input
+          style={styles.input}
+          value={ideal}
+          onChange={(e) => setIdeal(e.target.value)}
+        />
 
         <p>不安</p>
-        <input style={styles.input} onChange={(e) => setWorry(e.target.value)} />
+        <input
+          style={styles.input}
+          value={worry}
+          onChange={(e) => setWorry(e.target.value)}
+        />
 
-        <button
-          style={styles.button}
-          onClick={() => {
-            const data = { name, parts, trouble, period, ideal, worry };
-
-            const old = JSON.parse(localStorage.getItem("karuteList") || "[]");
-            const updated = [data, ...old];
-            localStorage.setItem("karuteList", JSON.stringify(updated));
-
-            setKarute(data);
-            setPage("answer");
-          }}
-        >
+        <button style={styles.button} onClick={handleNext}>
           次へ
         </button>
 
-        {/* 🔴 注意文 */}
         <div style={styles.notice}>
           <p>※この端末内のみで管理されます</p>
           <p>※個人情報は保存されません</p>
@@ -88,11 +105,51 @@ export default function Karute({ setPage, name, setKarute }) {
 }
 
 const styles = {
-  container:{height:"100vh",display:"flex",justifyContent:"center",alignItems:"center",background:"#f5f7fa"},
-  card:{background:"#fff",padding:20,width:320},
-  row:{display:"flex",flexWrap:"wrap",gap:5},
-  tag:{padding:5},
-  input:{width:"100%",padding:8,marginBottom:10},
-  button:{width:"100%",padding:12,background:"#4caf50",color:"#fff"},
-  notice:{fontSize:11,color:"#666",marginTop:10}
+  container:{
+    height:"100vh",
+    display:"flex",
+    justifyContent:"center",
+    alignItems:"center",
+    background:"#f5f7fa"
+  },
+  card:{
+    background:"#fff",
+    padding:20,
+    width:320,
+    borderRadius:10,
+    boxShadow:"0 2px 10px rgba(0,0,0,0.1)"
+  },
+  row:{
+    display:"flex",
+    flexWrap:"wrap",
+    gap:5,
+    marginBottom:10
+  },
+  tag:{
+    padding:"6px 10px",
+    borderRadius:6,
+    border:"none",
+    cursor:"pointer"
+  },
+  input:{
+    width:"100%",
+    padding:8,
+    marginBottom:10,
+    borderRadius:6,
+    border:"1px solid #ccc"
+  },
+  button:{
+    width:"100%",
+    padding:12,
+    background:"#4caf50",
+    color:"#fff",
+    border:"none",
+    borderRadius:6,
+    cursor:"pointer"
+  },
+  notice:{
+    fontSize:11,
+    color:"#666",
+    marginTop:10
+  }
 };

@@ -6,6 +6,7 @@ export default async function handler(req, res) {
 
     const body = req.body;
 
+    // 🔹 AI呼び出し
     const callAI = async (input) => {
       const r = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
@@ -15,29 +16,52 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           model: "gpt-4.1-mini",
-          input,
+          input: [
+            {
+              role: "system",
+              content: "必ず日本語で回答してください。",
+            },
+            {
+              role: "user",
+              content: input,
+            },
+          ],
         }),
       });
 
-      return r.json();
+      const data = await r.json();
+
+      // 🔥 安定抽出
+      const text =
+        data.output?.[0]?.content?.[0]?.text ||
+        data.output_text ||
+        "AI応答エラー";
+
+      return text;
     };
 
-    const textLog = body.messages
-      .map((m) => `${m.role === "user" ? "ユーザー" : "AI"}：${m.text}`)
+    // 🔹ログ整形
+    const textLog = (body.messages || [])
+      .map((m) =>
+        `${m.role === "user" ? "ユーザー" : "AI"}：${m.text}`
+      )
       .join("\n");
 
+    // =========================================
     // 🔥 チャット
+    // =========================================
     if (body.type === "chat") {
       let prompt = "";
 
-      // 🔹相談モード
       if (body.mode === "consult") {
         prompt = `
-あなたは店舗のカウンセリングAIです。
+あなたは店舗のカウンセリング担当です。
 
-・日本語で回答
-・やさしく
-・提案は自然に
+ルール：
+・必ず日本語
+・やさしく寄り添う
+・専門用語は避ける
+・売り込みしすぎない
 
 【カルテ】
 ${JSON.stringify(body.karute)}
@@ -45,37 +69,34 @@ ${JSON.stringify(body.karute)}
 【会話】
 ${textLog}
 
-次の返答を作成してください。
+自然な返答を1つ作成してください。
 `;
       }
 
-      // 🔹案内モード
       if (body.mode === "guide") {
         prompt = `
-あなたは店舗案内AIです。
+あなたは店舗の案内スタッフです。
 
-・日本語で回答
-・簡潔
+ルール：
+・必ず日本語
+・簡潔に
 ・わかりやすく
 
 【会話】
 ${textLog}
 
-質問に答えてください。
+質問に対して自然に答えてください。
 `;
       }
 
-      const data = await callAI(prompt);
-
-      const text =
-        data.output_text ||
-        data.output?.[0]?.content?.[0]?.text ||
-        "エラー";
+      const text = await callAI(prompt);
 
       return res.json({ reply: text });
     }
 
+    // =========================================
     // 🔥 要約
+    // =========================================
     if (body.type === "summary") {
       let prompt = "";
 
@@ -103,7 +124,7 @@ ${textLog}
 
       if (body.mode === "guide") {
         prompt = `
-以下のやり取りを簡潔にまとめてください。
+以下のやり取りをまとめてください。
 
 【会話】
 ${textLog}
@@ -117,20 +138,15 @@ ${textLog}
 `;
       }
 
-      const data = await callAI(prompt);
-
-      const text =
-        data.output_text ||
-        data.output?.[0]?.content?.[0]?.text ||
-        "要約エラー";
+      const text = await callAI(prompt);
 
       return res.json({ summary: text });
     }
 
-    return res.status(400).json({ error: "invalid" });
+    return res.status(400).json({ error: "invalid type" });
 
   } catch (e) {
-    console.error(e);
+    console.error("AI ERROR:", e);
     return res.status(500).json({ error: "server error" });
   }
 }
