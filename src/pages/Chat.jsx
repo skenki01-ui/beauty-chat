@@ -11,12 +11,18 @@ export default function Chat({ setPage, karute, mode, type }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🔹送信
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
-    const userMessage = { role: "user", text: input };
-    const newMessages = [...messages, userMessage];
+    const userText = input.trim();
+
+    const newMessages = [
+      ...messages,
+      {
+        role: "user",
+        text: userText,
+      },
+    ];
 
     setMessages(newMessages);
     setInput("");
@@ -30,32 +36,46 @@ export default function Chat({ setPage, karute, mode, type }) {
         },
         body: JSON.stringify({
           type: "chat",
-          mode,
-          category: type,
+          mode: mode || "consult",
+          category: type || "beauty",
           messages: newMessages,
-          karute,
+          karute: karute || {},
         }),
       });
 
       const data = await res.json();
 
-      const reply = data.reply || "返答なし";
+      console.log("AIレスポンス", data);
+
+      const aiText =
+        data.reply ||
+        data.text ||
+        data.output_text ||
+        data.output?.[0]?.content?.[0]?.text ||
+        "返答なし";
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: reply },
+        {
+          role: "assistant",
+          text: aiText,
+        },
       ]);
-    } catch (e) {
+    } catch (error) {
+      console.log("通信エラー", error);
+
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: "通信エラー" },
+        {
+          role: "assistant",
+          text: "通信エラー",
+        },
       ]);
     }
 
     setLoading(false);
   };
 
-  // 🔥終了 → 要約生成
   const handleEnd = async () => {
     try {
       const res = await fetch("/api/ai", {
@@ -65,33 +85,32 @@ export default function Chat({ setPage, karute, mode, type }) {
         },
         body: JSON.stringify({
           type: "summary",
-          mode,
-          category: type,
+          mode: mode || "consult",
+          category: type || "beauty",
           messages,
-          karute,
+          karute: karute || {},
         }),
       });
 
       const data = await res.json();
 
-      const summary = data.summary || "生成失敗";
+      console.log("まとめレスポンス", data);
 
-      // 🔹最新
+      const summary =
+        data.summary ||
+        data.reply ||
+        data.text ||
+        data.output_text ||
+        "まとめ生成失敗";
+
       localStorage.setItem("lastSummary", summary);
 
-      // 🔹履歴3件
-      const saved = JSON.parse(
-        localStorage.getItem("summaryHistory") || "[]"
-      );
-
+      const saved = JSON.parse(localStorage.getItem("summaryHistory") || "[]");
       const updated = [summary, ...saved].slice(0, 3);
 
-      localStorage.setItem(
-        "summaryHistory",
-        JSON.stringify(updated)
-      );
-    } catch (e) {
-      console.log(e);
+      localStorage.setItem("summaryHistory", JSON.stringify(updated));
+    } catch (error) {
+      console.log("まとめ通信エラー", error);
     }
 
     setPage("home");
@@ -99,7 +118,6 @@ export default function Chat({ setPage, karute, mode, type }) {
 
   return (
     <div style={styles.container}>
-      {/* チャット */}
       <div style={styles.chatBox}>
         {messages.map((msg, i) => (
           <div
@@ -114,9 +132,8 @@ export default function Chat({ setPage, karute, mode, type }) {
                 display: "inline-block",
                 padding: 10,
                 borderRadius: 10,
-                background:
-                  msg.role === "user" ? "#4a90e2" : "#eee",
-                color: msg.role === "user" ? "#fff" : "#000",
+                background: msg.role === "user" ? "#4a90e2" : "#eeeeee",
+                color: msg.role === "user" ? "#ffffff" : "#000000",
                 maxWidth: "70%",
                 wordBreak: "break-word",
               }}
@@ -127,13 +144,18 @@ export default function Chat({ setPage, karute, mode, type }) {
         ))}
 
         {loading && (
-          <div style={{ color: "#999", fontSize: 12 }}>
+          <div style={styles.loadingText}>
             AI応答中...
           </div>
         )}
       </div>
 
-      {/* 入力 */}
+      <div style={styles.endWrap}>
+        <button onClick={handleEnd} style={styles.endBtn}>
+          終了
+        </button>
+      </div>
+
       <div style={styles.inputArea}>
         <input
           value={input}
@@ -141,9 +163,12 @@ export default function Chat({ setPage, karute, mode, type }) {
           placeholder="入力..."
           style={styles.input}
           onKeyDown={(e) => {
-            if (e.key === "Enter") sendMessage();
+            if (e.key === "Enter") {
+              sendMessage();
+            }
           }}
         />
+
         <button
           onClick={sendMessage}
           disabled={loading}
@@ -152,20 +177,13 @@ export default function Chat({ setPage, karute, mode, type }) {
           送信
         </button>
       </div>
-
-      {/* 終了 */}
-      <div style={styles.endWrap}>
-        <button onClick={handleEnd} style={styles.endBtn}>
-          終了
-        </button>
-      </div>
     </div>
   );
 }
 
 const styles = {
   container: {
-    background: "#fff",
+    background: "#ffffff",
     height: "100vh",
     display: "flex",
     flexDirection: "column",
@@ -178,41 +196,48 @@ const styles = {
     background: "#f5f7fa",
   },
 
+  loadingText: {
+    fontSize: 12,
+    color: "#777777",
+    marginTop: 8,
+  },
+
+  endWrap: {
+    display: "flex",
+    justifyContent: "center",
+    padding: "6px 0",
+    background: "#ffffff",
+  },
+
+  endBtn: {
+    padding: "6px 16px",
+    fontSize: 12,
+    background: "#444444",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: 20,
+  },
+
   inputArea: {
     display: "flex",
     padding: 10,
-    borderTop: "1px solid #ccc",
-    background: "#fff",
+    borderTop: "1px solid #cccccc",
+    background: "#ffffff",
   },
 
   input: {
     flex: 1,
     marginRight: 5,
     padding: 10,
+    border: "1px solid #cccccc",
     borderRadius: 6,
-    border: "1px solid #ccc",
   },
 
   sendBtn: {
     padding: "10px 16px",
     background: "#4a90e2",
-    color: "#fff",
+    color: "#ffffff",
     border: "none",
     borderRadius: 6,
-  },
-
-  endWrap: {
-    display: "flex",
-    justifyContent: "center",
-    padding: 10,
-  },
-
-  endBtn: {
-    padding: "6px 16px",
-    fontSize: 12,
-    background: "#444",
-    color: "#fff",
-    border: "none",
-    borderRadius: 20,
   },
 };
