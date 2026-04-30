@@ -5,17 +5,18 @@ import Karute from "./pages/Karute";
 import Answer from "./pages/Answer";
 import ModeSelect from "./pages/ModeSelect";
 import Chat from "./pages/Chat";
-import Summary from "./pages/Summary";
 import Menu from "./pages/Menu";
 
 export default function App() {
   const [page, setPage] = useState("home");
 
-  const [mode, setMode] = useState(""); // 🔥追加
-  const [type, setType] = useState(""); // 🔥追加
+  const [mode, setMode] = useState("");
+  const [type, setType] = useState("");
 
   const [karute, setKarute] = useState({});
   const [showMenu, setShowMenu] = useState(false);
+
+  const [name, setName] = useState(""); // 🔥追加
 
   const pressTimer = useRef(null);
 
@@ -65,6 +66,7 @@ export default function App() {
       )}
 
       {page === "home" && <Home setPage={setPage} />}
+
       {page === "mode" && (
         <ModeSelect
           setPage={setPage}
@@ -74,19 +76,26 @@ export default function App() {
       )}
 
       {page === "karute" && (
-        <Karute setPage={setPage} setKarute={setKarute} />
+        <Karute
+          setPage={setPage}
+          setKarute={setKarute}
+          name={name}       // 🔥追加
+          setName={setName} // 🔥追加
+        />
+      )}
+
+      {page === "answer" && (
+        <Answer karute={karute} setPage={setPage} />
       )}
 
       {page === "chat" && (
         <Chat
           setPage={setPage}
           karute={karute}
-          mode={mode}   // 🔥追加
-          type={type}   // 🔥追加
+          mode={mode}
+          type={type}
         />
       )}
-
-      {page === "summary" && <Summary setPage={setPage} />}
 
       {showMenu && <Menu setPage={setPage} setShow={setShowMenu} />}
     </div>

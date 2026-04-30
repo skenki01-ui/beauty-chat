@@ -32,8 +32,8 @@ export default function Karute({ setPage, name, setKarute }) {
       <div style={styles.card}>
         <h3>カルテ入力</h3>
 
-        <p>{name}さん、気になる部位</p>
-
+        <p>{name ? `${name}さん` : "お客様"}、気になる部位</p>
+        
         <div style={styles.row}>
           {["額","目元","鼻","頬","唇","フェイスライン"].map((p) => (
             <button
