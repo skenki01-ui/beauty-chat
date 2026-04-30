@@ -3,9 +3,11 @@ import { useState, useRef } from "react";
 import Home from "./pages/Home";
 import Karute from "./pages/Karute";
 import Answer from "./pages/Answer";
+import Result from "./pages/Result";
 import ModeSelect from "./pages/ModeSelect";
 import Chat from "./pages/Chat";
 import Menu from "./pages/Menu";
+import List from "./pages/List";
 
 export default function App() {
   const [page, setPage] = useState("home");
@@ -14,9 +16,9 @@ export default function App() {
   const [type, setType] = useState("");
 
   const [karute, setKarute] = useState({});
-  const [showMenu, setShowMenu] = useState(false);
+  const [name, setName] = useState("");
 
-  const [name, setName] = useState(""); // 🔥追加
+  const [showMenu, setShowMenu] = useState(false);
 
   const pressTimer = useRef(null);
 
@@ -68,24 +70,24 @@ export default function App() {
       {page === "home" && <Home setPage={setPage} />}
 
       {page === "mode" && (
-        <ModeSelect
-          setPage={setPage}
-          setMode={setMode}
-          setType={setType}
-        />
+        <ModeSelect setPage={setPage} setMode={setMode} setType={setType} />
       )}
 
       {page === "karute" && (
         <Karute
           setPage={setPage}
           setKarute={setKarute}
-          name={name}       // 🔥追加
-          setName={setName} // 🔥追加
+          name={name}
+          setName={setName}
         />
       )}
 
       {page === "answer" && (
         <Answer karute={karute} setPage={setPage} />
+      )}
+
+      {page === "result" && (
+        <Result karute={karute} setPage={setPage} />
       )}
 
       {page === "chat" && (
@@ -96,6 +98,8 @@ export default function App() {
           type={type}
         />
       )}
+
+      {page === "list" && <List setPage={setPage} />}
 
       {showMenu && <Menu setPage={setPage} setShow={setShowMenu} />}
     </div>
