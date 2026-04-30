@@ -6,7 +6,8 @@ export default async function handler(req, res) {
 
     const body = req.body;
 
-    // 🔹 AI呼び出し
+    console.log("受信データ", body); // ←追加
+
     const callAI = async (input) => {
       const r = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
@@ -16,137 +17,80 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           model: "gpt-4.1-mini",
-          input: [
-            {
-              role: "system",
-              content: "必ず日本語で回答してください。",
-            },
-            {
-              role: "user",
-              content: input,
-            },
-          ],
+          input,
         }),
       });
 
-      const data = await r.json();
-
-      // 🔥 安定抽出
-      const text =
-        data.output?.[0]?.content?.[0]?.text ||
-        data.output_text ||
-        "AI応答エラー";
-
-      return text;
+      return r.json();
     };
 
-    // 🔹ログ整形
     const textLog = (body.messages || [])
-      .map((m) =>
-        `${m.role === "user" ? "ユーザー" : "AI"}：${m.text}`
-      )
+      .map((m) => `${m.role === "user" ? "ユーザー" : "AI"}：${m.text}`)
       .join("\n");
 
-    // =========================================
-    // 🔥 チャット
-    // =========================================
+    // ===== チャット =====
     if (body.type === "chat") {
       let prompt = "";
 
       if (body.mode === "consult") {
         prompt = `
-あなたは店舗のカウンセリング担当です。
-
-ルール：
-・必ず日本語
-・やさしく寄り添う
-・専門用語は避ける
-・売り込みしすぎない
+あなたは店舗のカウンセリングAIです。
+日本語でやさしく回答してください。
 
 【カルテ】
 ${JSON.stringify(body.karute)}
 
 【会話】
 ${textLog}
-
-自然な返答を1つ作成してください。
 `;
       }
 
       if (body.mode === "guide") {
         prompt = `
-あなたは店舗の案内スタッフです。
-
-ルール：
-・必ず日本語
-・簡潔に
-・わかりやすく
+あなたは店舗案内AIです。
+日本語で簡潔に回答してください。
 
 【会話】
 ${textLog}
-
-質問に対して自然に答えてください。
 `;
       }
 
-      const text = await callAI(prompt);
+      if (!prompt) {
+        return res.json({ reply: "設定エラー（mode未設定）" });
+      }
+
+      const data = await callAI(prompt);
+
+      const text =
+        data.output_text ||
+        data.output?.[0]?.content?.[0]?.text ||
+        "AIエラー";
 
       return res.json({ reply: text });
     }
 
-    // =========================================
-    // 🔥 要約
-    // =========================================
+    // ===== 要約 =====
     if (body.type === "summary") {
-      let prompt = "";
+      let prompt = `
+以下をまとめてください
 
-      if (body.mode === "consult") {
-        prompt = `
-以下をカルテとしてまとめてください。
-
-【カルテ】
-${JSON.stringify(body.karute)}
-
-【会話】
 ${textLog}
-
-▼形式
-【悩み】
-・
-
-【要望】
-・
-
-【提案内容】
-・
 `;
-      }
 
-      if (body.mode === "guide") {
-        prompt = `
-以下のやり取りをまとめてください。
+      const data = await callAI(prompt);
 
-【会話】
-${textLog}
-
-▼形式
-【問い合わせ内容】
-・
-
-【対応内容】
-・
-`;
-      }
-
-      const text = await callAI(prompt);
+      const text =
+        data.output_text ||
+        data.output?.[0]?.content?.[0]?.text ||
+        "要約エラー";
 
       return res.json({ summary: text });
     }
 
-    return res.status(400).json({ error: "invalid type" });
+    return res.json({ reply: "type不明" });
 
   } catch (e) {
-    console.error("AI ERROR:", e);
+    console.error(e);
     return res.status(500).json({ error: "server error" });
   }
 }

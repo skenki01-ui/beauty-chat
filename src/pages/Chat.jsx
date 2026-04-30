@@ -11,6 +11,7 @@ export default function Chat({ setPage, karute, mode, type }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔹送信
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
@@ -18,10 +19,7 @@ export default function Chat({ setPage, karute, mode, type }) {
 
     const newMessages = [
       ...messages,
-      {
-        role: "user",
-        text: userText,
-      },
+      { role: "user", text: userText },
     ];
 
     setMessages(newMessages);
@@ -49,7 +47,6 @@ export default function Chat({ setPage, karute, mode, type }) {
 
       const aiText =
         data.reply ||
-        data.text ||
         data.output_text ||
         data.output?.[0]?.content?.[0]?.text ||
         "返答なし";
@@ -61,8 +58,8 @@ export default function Chat({ setPage, karute, mode, type }) {
           text: aiText,
         },
       ]);
-    } catch (error) {
-      console.log("通信エラー", error);
+    } catch (e) {
+      console.log("通信エラー", e);
 
       setMessages((prev) => [
         ...prev,
@@ -76,6 +73,7 @@ export default function Chat({ setPage, karute, mode, type }) {
     setLoading(false);
   };
 
+  // 🔥終了 → 要約保存
   const handleEnd = async () => {
     try {
       const res = await fetch("/api/ai", {
@@ -99,20 +97,24 @@ export default function Chat({ setPage, karute, mode, type }) {
       const summary =
         data.summary ||
         data.reply ||
-        data.text ||
         data.output_text ||
         "まとめ生成失敗";
 
+      // 保存
       localStorage.setItem("lastSummary", summary);
 
-      const saved = JSON.parse(localStorage.getItem("summaryHistory") || "[]");
+      const saved = JSON.parse(
+        localStorage.getItem("summaryHistory") || "[]"
+      );
+
       const updated = [summary, ...saved].slice(0, 3);
 
       localStorage.setItem("summaryHistory", JSON.stringify(updated));
-    } catch (error) {
-      console.log("まとめ通信エラー", error);
+    } catch (e) {
+      console.log("まとめエラー", e);
     }
 
+    // 👉 店舗用なのでホームに戻す
     setPage("home");
   };
 
@@ -132,8 +134,10 @@ export default function Chat({ setPage, karute, mode, type }) {
                 display: "inline-block",
                 padding: 10,
                 borderRadius: 10,
-                background: msg.role === "user" ? "#4a90e2" : "#eeeeee",
-                color: msg.role === "user" ? "#ffffff" : "#000000",
+                background:
+                  msg.role === "user" ? "#4a90e2" : "#eee",
+                color:
+                  msg.role === "user" ? "#fff" : "#000",
                 maxWidth: "70%",
                 wordBreak: "break-word",
               }}
@@ -144,12 +148,13 @@ export default function Chat({ setPage, karute, mode, type }) {
         ))}
 
         {loading && (
-          <div style={styles.loadingText}>
+          <div style={{ fontSize: 12, color: "#666" }}>
             AI応答中...
           </div>
         )}
       </div>
 
+      {/* 🔥終了ボタン（中央・小さめ） */}
       <div style={styles.endWrap}>
         <button onClick={handleEnd} style={styles.endBtn}>
           終了
@@ -163,17 +168,11 @@ export default function Chat({ setPage, karute, mode, type }) {
           placeholder="入力..."
           style={styles.input}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              sendMessage();
-            }
+            if (e.key === "Enter") sendMessage();
           }}
         />
 
-        <button
-          onClick={sendMessage}
-          disabled={loading}
-          style={styles.sendBtn}
-        >
+        <button onClick={sendMessage} disabled={loading}>
           送信
         </button>
       </div>
@@ -183,10 +182,10 @@ export default function Chat({ setPage, karute, mode, type }) {
 
 const styles = {
   container: {
-    background: "#ffffff",
     height: "100vh",
     display: "flex",
     flexDirection: "column",
+    background: "#fff",
   },
 
   chatBox: {
@@ -196,48 +195,32 @@ const styles = {
     background: "#f5f7fa",
   },
 
-  loadingText: {
-    fontSize: 12,
-    color: "#777777",
-    marginTop: 8,
-  },
-
-  endWrap: {
-    display: "flex",
-    justifyContent: "center",
-    padding: "6px 0",
-    background: "#ffffff",
-  },
-
-  endBtn: {
-    padding: "6px 16px",
-    fontSize: 12,
-    background: "#444444",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: 20,
-  },
-
   inputArea: {
     display: "flex",
     padding: 10,
-    borderTop: "1px solid #cccccc",
-    background: "#ffffff",
+    borderTop: "1px solid #ccc",
   },
 
   input: {
     flex: 1,
     marginRight: 5,
     padding: 10,
-    border: "1px solid #cccccc",
+    border: "1px solid #ccc",
     borderRadius: 6,
   },
 
-  sendBtn: {
-    padding: "10px 16px",
-    background: "#4a90e2",
-    color: "#ffffff",
+  endWrap: {
+    display: "flex",
+    justifyContent: "center",
+    padding: 8,
+  },
+
+  endBtn: {
+    padding: "6px 16px",
+    fontSize: 12,
+    background: "#444",
+    color: "#fff",
     border: "none",
-    borderRadius: 6,
+    borderRadius: 20,
   },
 };
