@@ -2,12 +2,16 @@ import { useState, useRef } from "react";
 
 import Home from "./pages/Home";
 import Karute from "./pages/Karute";
-import Answer from "./pages/Answer";
 import Result from "./pages/Result";
 import ModeSelect from "./pages/ModeSelect";
 import Chat from "./pages/Chat";
 import Menu from "./pages/Menu";
 import List from "./pages/List";
+
+import Payment from "./pages/Payment";
+import Explanation from "./pages/Explanation";
+import Subsidy from "./pages/Subsidy";
+
 
 export default function App() {
   const [page, setPage] = useState("home");
@@ -67,10 +71,13 @@ export default function App() {
         </>
       )}
 
-      {page === "home" && <Home setPage={setPage} />}
-
-      {page === "mode" && (
-        <ModeSelect setPage={setPage} setMode={setMode} setType={setType} />
+      {/* 基本画面 */}
+      {page === "home" && (
+        <Home
+          setPage={setPage}
+          setName={setName}
+          setKarute={setKarute}
+        />
       )}
 
       {page === "karute" && (
@@ -78,16 +85,15 @@ export default function App() {
           setPage={setPage}
           setKarute={setKarute}
           name={name}
-          setName={setName}
         />
-      )}
-
-      {page === "answer" && (
-        <Answer karute={karute} setPage={setPage} />
       )}
 
       {page === "result" && (
         <Result karute={karute} setPage={setPage} />
+      )}
+
+      {page === "mode" && (
+        <ModeSelect setPage={setPage} setMode={setMode} setType={setType} />
       )}
 
       {page === "chat" && (
@@ -101,6 +107,12 @@ export default function App() {
 
       {page === "list" && <List setPage={setPage} />}
 
+      {/* 🔥 ここが今回の修正ポイント */}
+      {page === "payment" && <Payment setPage={setPage} />}
+      {page === "explanation" && <Explanation setPage={setPage} />}
+      {page === "subsidy" && <Subsidy setPage={setPage} />}
+     
+      {/* メニュー */}
       {showMenu && <Menu setPage={setPage} setShow={setShowMenu} />}
     </div>
   );

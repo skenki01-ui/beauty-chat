@@ -24,7 +24,7 @@ export default function Karute({ setPage, name, setKarute }) {
     localStorage.setItem("karuteList", JSON.stringify(updated));
 
     setKarute(data);
-    setPage("answer");
+    setPage("result");
   };
 
   return (

@@ -1,8 +1,12 @@
 export default function Result({ karute, setPage }) {
+  if (!karute) {
+    return <div>データなし</div>;
+  }
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h3>診断結果</h3>
+        <h2>診断結果</h2>
 
         <p>部位：{karute.parts?.join(" / ") || "-"}</p>
         <p>悩み：{karute.trouble || "-"}</p>
@@ -18,7 +22,7 @@ export default function Result({ karute, setPage }) {
         </button>
 
         <button
-          style={styles.back}
+          style={styles.button2}
           onClick={() => setPage("home")}
         >
           戻る
@@ -39,20 +43,23 @@ const styles = {
   card: {
     background: "#fff",
     padding: 20,
+    width: 300,
     borderRadius: 10,
-    width: 320,
   },
   button: {
     width: "100%",
     padding: 12,
-    background: "#4caf50",
+    marginTop: 10,
+    background: "#2196f3",
     color: "#fff",
     border: "none",
-    marginTop: 10,
   },
-  back: {
+  button2: {
     width: "100%",
-    padding: 10,
+    padding: 12,
     marginTop: 10,
+    background: "#aaa",
+    color: "#fff",
+    border: "none",
   },
 };

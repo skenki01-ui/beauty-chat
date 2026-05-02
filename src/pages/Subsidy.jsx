@@ -1,42 +1,35 @@
-import React from "react";
-
 export default function Subsidy({ setPage }) {
   return (
-    <div
-      style={{
-        padding: 20,
-        textAlign: "center",
-      }}
-    >
-      <h2>補助金サポート</h2>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h2>補助金サポート</h2>
 
-      <p style={{ marginTop: 20 }}>
-        補助金について気になることがあれば相談できます
-      </p>
+        <p>
+          このアプリでは、あなたの状況に合わせて
+          補助金の可能性を整理します。
+        </p>
 
-      <button
-        onClick={() => setPage("subsidyChat")}
-        style={{
-          marginTop: 30,
-          padding: "12px 20px",
-          fontSize: 16,
-          background: "#4caf50",
-          color: "#fff",
-          border: "none",
-          borderRadius: 6,
-          cursor: "pointer",
-        }}
-      >
-        相談する
-      </button>
+        <p>
+          ・使える補助金が分からない  
+          ・申請が難しい  
+          ・そもそも対象か知りたい  
+        </p>
 
-      <div style={{ marginTop: 30 }}>
+        <p>
+          こういった悩みを
+          チャットでそのまま相談できます。
+        </p>
+
         <button
+          style={styles.button}
+          onClick={() => setPage("chat")}
+        >
+          チャットで相談する
+        </button>
+
+        <button
+          style={styles.button2}
           onClick={() => setPage("home")}
-          style={{
-            padding: "8px 14px",
-            fontSize: 14,
-          }}
         >
           戻る
         </button>
@@ -44,3 +37,35 @@ export default function Subsidy({ setPage }) {
     </div>
   );
 }
+
+const styles = {
+  container: {
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#f5f7fa",
+  },
+  card: {
+    background: "#fff",
+    padding: 20,
+    width: 320,
+    borderRadius: 10,
+  },
+  button: {
+    width: "100%",
+    padding: 12,
+    marginTop: 10,
+    background: "#2196f3",
+    color: "#fff",
+    border: "none",
+  },
+  button2: {
+    width: "100%",
+    padding: 12,
+    marginTop: 10,
+    background: "#aaa",
+    color: "#fff",
+    border: "none",
+  },
+};
